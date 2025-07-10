@@ -11,13 +11,13 @@ public class HandlerService {
             "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js"
     );
 
-    public static void createHandlers(HttpServer server) {
+    public static void createHandlers(Server server) {
         for (String path : VALID_PATHS) {
             registerHandler(path, server);
         }
     }
 
-    private static void registerHandler(String path, HttpServer server) {
+    private static void registerHandler(String path, Server server) {
         Path filePath = Path.of("public", path);
         if (!Files.exists(filePath)) {
             System.err.println("⚠️  File not found: " + filePath.toAbsolutePath());
@@ -33,7 +33,7 @@ public class HandlerService {
         }
     }
 
-    private static void registerStaticHandler(HttpServer server, String path, Path filePath, String mimeType) {
+    private static void registerStaticHandler(Server server, String path, Path filePath, String mimeType) {
         server.addHandler("GET", path, (req, res) -> {
             try {
                 byte[] content = Files.readAllBytes(filePath);
@@ -45,7 +45,7 @@ public class HandlerService {
         System.out.println("✅ Registered static GET handler for " + path);
     }
 
-    private static void registerDynamicHandler(HttpServer server, String path, Path filePath, String mimeType) {
+    private static void registerDynamicHandler(Server server, String path, Path filePath, String mimeType) {
         server.addHandler("GET", path, (req, res) -> {
             try {
                 String template = Files.readString(filePath);

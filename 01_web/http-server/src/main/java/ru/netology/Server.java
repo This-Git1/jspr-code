@@ -1,5 +1,8 @@
 package ru.netology;
 
+import ru.netology.exception.BadRequestException;
+import ru.netology.exception.EmptyRequestException;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,12 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class HttpServer {
+public class Server {
     private final int port;
     private final ExecutorService executor;
     private final Map<String, Map<String, Handler>> handlers = new ConcurrentHashMap<>();
 
-    public HttpServer(int port) {
+    public Server(int port) {
         this.port = port;
         this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
@@ -44,7 +47,7 @@ public class HttpServer {
                 clientSocket;
                 InputStream in = clientSocket.getInputStream();
                 OutputStream out = new BufferedOutputStream(clientSocket.getOutputStream())
-                ) {
+        ) {
 
             Response response = new Response(out);
             try {
@@ -79,6 +82,4 @@ public class HttpServer {
 
         handler.handle(request, response);
     }
-
-
 }

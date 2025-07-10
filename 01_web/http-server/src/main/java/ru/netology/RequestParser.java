@@ -1,5 +1,8 @@
 package ru.netology;
 
+import ru.netology.exception.BadRequestException;
+import ru.netology.exception.EmptyRequestException;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

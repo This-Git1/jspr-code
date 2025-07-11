@@ -51,8 +51,10 @@ public class Server {
 
             Response response = new Response(out);
             try {
+
                 Request request = RequestParser.parse(in);
                 dispatchRequest(request, response);
+
             } catch (EmptyRequestException e) {
                 response.sendNotFound();
             } catch (BadRequestException e) {
@@ -74,7 +76,9 @@ public class Server {
             return;
         }
 
-        var handler = methodHandlers.get(request.getUrl());
+        String path = request.getUri().getPath();
+
+        var handler = methodHandlers.get(path);
         if (handler == null) {
             response.sendNotFound();
             return;

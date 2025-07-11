@@ -1,16 +1,17 @@
 package ru.netology;
 
+import java.net.URI;
 import java.util.Map;
 
 public class Request {
     private final String method;
-    private final String url;
+    private final URI uri;
     private final Map<String, String> headers;
     private final byte[] body;
 
-    public Request(String method, String url, Map<String, String> headers, byte[] body) {
+    public Request(String method, URI uri, Map<String, String> headers, byte[] body) {
         this.method = method;
-        this.url = url;
+        this.uri = uri;
         this.headers = headers;
         this.body = body;
     }
@@ -19,8 +20,8 @@ public class Request {
         return method;
     }
 
-    public String getUrl() {
-        return url;
+    public URI getUri() {
+        return uri;
     }
 
     public Map<String, String> getHeaders() {

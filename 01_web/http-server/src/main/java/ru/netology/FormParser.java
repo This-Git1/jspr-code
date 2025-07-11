@@ -1,13 +1,14 @@
 package ru.netology;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.HashMap;
 import java.net.URLDecoder;
 
-
 public class FormParser {
+
+    private FormParser() {
+    }
 
     public static Map<String, String> parseFormData(byte[] body) {
         Map<String, String> formData = new HashMap<>();
@@ -17,6 +18,7 @@ public class FormParser {
 
         for (String param : params) {
             String[] keyValue = param.split("=");
+
             if (keyValue.length >= 1) {
                 String key = urlDecode(keyValue[0]);
                 String value = keyValue.length == 2 ? urlDecode(keyValue[1]) : "";

@@ -1,29 +1,40 @@
 package ru.netology;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import ru.netology.exception.BadRequestException;
+import ru.netology.exception.EmptyRequestException;
+
+import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URI;
 
 public class RequestParser {
 
     public static Request parse(InputStream inputStream) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        BufferedInputStream bufferedInput = new BufferedInputStream(inputStream);
+        bufferedInput.mark(8192);
 
-        String requestLine = readLine(in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(bufferedInput, StandardCharsets.UTF_8));
+
+        String requestLine = readLine(reader);
         String[] requestLineParts = parseRequestLine(requestLine);
 
         String method = requestLineParts[0];
-        String path = requestLineParts[1];
+        URI uri = parseUri(requestLineParts[1]);
 
-        Map<String, String> headers = readHeaders(in);
+
+        Map<String, String> headers = readHeaders(reader);
         int contentLength = getContentLength(headers);
-        byte[] body = readBody(inputStream, contentLength);
 
-        return new Request(method, path, headers, body);
+        if (method.equals("GET") || method.equals("DELETE")) {
+            return new Request(method, uri, headers, new byte[0]);
+        }
+
+        byte[] body = readBody(bufferedInput, contentLength);
+
+        return new Request(method, uri, headers, body);
     }
 
     private static String readLine(BufferedReader reader) throws IOException {
@@ -34,12 +45,20 @@ public class RequestParser {
         return requestLine;
     }
 
-    private static String[] parseRequestLine(String requestLine) throws IOException{
+    private static String[] parseRequestLine(String requestLine) throws BadRequestException {
         String[] parts = requestLine.split(" ");
         if (parts.length != 3) {
-            throw new BadRequestException();
+            throw new BadRequestException("Invalid request line: " + requestLine);
         }
         return parts;
+    }
+
+    private static URI parseUri(String rawUri) throws BadRequestException {
+        try {
+            return new URI(rawUri);
+        } catch (URISyntaxException e) {
+            throw new BadRequestException("Invalid URI: " + rawUri);
+        }
     }
 
     private static Map<String, String> readHeaders(BufferedReader reader) throws IOException {
@@ -58,19 +77,27 @@ public class RequestParser {
             try {
                 contentLength = Integer.parseInt(headers.get("Content-Length"));
             } catch (NumberFormatException e) {
-                throw new IOException("Invalid Content-Length header");
+                throw new BadRequestException("Invalid Content-Length header");
             }
         }
         return contentLength;
     }
 
-    private static byte[] readBody(InputStream inputStream, int contentLength) throws IOException {
+    private static byte[] readBody(BufferedInputStream bufferedInputStream, int contentLength) throws IOException {
+        System.out.println("Читаем тело запроса длинной: " + contentLength);
+        bufferedInputStream.reset();
+        if (contentLength <= 0) {
+            return new byte[0];
+        }
+
         byte[] body = new byte[contentLength];
-        if (contentLength > 0) {
-           int bytesRead = inputStream.read(body);
-           if (bytesRead != contentLength) {
-               throw new IOException("Incomplete body read");
-           }
+        int bytesReadTotal = 0;
+        while (bytesReadTotal < contentLength) {
+            int read = bufferedInputStream.read(body, bytesReadTotal, contentLength - bytesReadTotal);
+            if (read == -1) {
+                throw new IOException("Unexpected end of stream while reading body");
+            }
+            bytesReadTotal += read;
         }
         return body;
     }
